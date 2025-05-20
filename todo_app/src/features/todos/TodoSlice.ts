@@ -1,3 +1,4 @@
+// src/features/todos/TodoSlice.ts
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { loadTodosFromLocalStorage, saveTodosToLocalStorage } from '../../utils/localStorage';
@@ -13,11 +14,16 @@ const todosSlice = createSlice({
   name: 'todos',
   initialState,
   reducers: {
-    addTodo: (state, action: PayloadAction<string>) => {
+    addTodo: (state, action: PayloadAction<{ text: string; dueDate: string | null }>) => {
+      const { text, dueDate } = action.payload;
+      const now = new Date().toISOString();
       const newTodo: Todo = {
         id: Date.now().toString(),
-        text: action.payload,
+        text,
         completed: false,
+        dueDate,
+        created: now,
+        completedAt: null,
       };
       state.todos.push(newTodo);
       saveTodosToLocalStorage(state.todos);
@@ -26,14 +32,16 @@ const todosSlice = createSlice({
       const todo = state.todos.find((todo) => todo.id === action.payload);
       if (todo) {
         todo.completed = !todo.completed;
+        todo.completedAt = todo.completed ? new Date().toISOString() : null;
         saveTodosToLocalStorage(state.todos);
       }
     },
-    editTodo: (state, action: PayloadAction<{ id: string; text: string }>) => {
-      const { id, text } = action.payload;
+    editTodo: (state, action: PayloadAction<{ id: string; text: string; dueDate: string | null }>) => {
+      const { id, text, dueDate } = action.payload;
       const todo = state.todos.find((todo) => todo.id === id);
       if (todo) {
         todo.text = text;
+        todo.dueDate = dueDate;
         saveTodosToLocalStorage(state.todos);
       }
     },
